@@ -14,8 +14,8 @@ const DEMO_PERSON = {
   location: "San Francisco, CA",
   summary: "Results-driven PM with 6+ years leading cross-functional teams at Google and Stripe. Shipped products used by 50M+ users.",
   experience: [
-    { role: "Product Manager II", company: "Google LLC", dates: "2021–Present", bullets: ["Led 12-person team, shipped 3 major features", "Improved retention by 28%", "Managed $4M roadmap"] },
-    { role: "Associate PM", company: "Stripe", dates: "2019–2021", bullets: ["Launched Stripe Billing to 10k+ merchants", "Reduced churn by 18% via onboarding redesign"] },
+    { role: "Product Manager II", company: "Google LLC", dates: "2021–Present", location: "San Francisco, CA", bullets: ["Led 12-person team, shipped 3 major features", "Improved retention by 28%", "Managed $4M roadmap"] },
+    { role: "Associate PM", company: "Stripe", dates: "2019–2021", location: "San Francisco, CA", bullets: ["Launched Stripe Billing to 10k+ merchants", "Reduced churn by 18% via onboarding redesign"] },
   ],
   education: "B.S. Computer Science · UC Berkeley · GPA 3.9",
   skills: ["Agile", "SQL", "Figma", "GCP", "Python", "Scrum", "A/B Testing"],

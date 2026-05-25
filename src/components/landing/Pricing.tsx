@@ -199,12 +199,12 @@ export function Pricing() {
           {/* Animated orbs */}
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.35, 0.2] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
             className="absolute -top-20 -right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl pointer-events-none"
           />
           <motion.div
             animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.28, 0.15] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            transition={{ duration: 7, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 1 }}
             className="absolute -bottom-16 -left-16 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"
           />
 
