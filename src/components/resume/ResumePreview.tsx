@@ -7,18 +7,65 @@ import React from "react";
 
 export const ResumePreview = React.forwardRef<HTMLDivElement, { resumeData?: any }>((props, ref) => {
   const { resume: storeResume } = useResumeStore();
-  const resume = props.resumeData || storeResume;
+  const rawResume = props.resumeData || storeResume;
 
-  if (!resume) return null;
+  if (!rawResume) return null;
+
+  // Normalize resume data to prevent runtime crashes from missing fields/relations
+  const resume = {
+    ...rawResume,
+    template: rawResume.template || "modern",
+    personalInfo: {
+      fullName: "",
+      jobTitle: "",
+      email: "",
+      phone: "",
+      location: "",
+      website: "",
+      linkedin: "",
+      github: "",
+      summary: "",
+      ...(rawResume.personalInfo || {}),
+    },
+    experience: (rawResume.experience || []).map((exp: any) => ({
+      ...exp,
+      jobTitle: exp.jobTitle || "",
+      company: exp.company || "",
+      location: exp.location || "",
+      startDate: exp.startDate || "",
+      endDate: exp.endDate || "",
+      description: Array.isArray(exp.description) ? exp.description : [],
+    })),
+    education: (rawResume.education || []).map((edu: any) => ({
+      ...edu,
+      degree: edu.degree || "",
+      school: edu.school || "",
+      location: edu.location || "",
+      startDate: edu.startDate || "",
+      endDate: edu.endDate || "",
+      description: edu.description || "",
+    })),
+    skills: (rawResume.skills || []).map((skill: any) => ({
+      ...skill,
+      name: skill.name || "",
+    })),
+    projects: (rawResume.projects || []).map((proj: any) => ({
+      ...proj,
+      title: proj.title || "",
+      description: proj.description || "",
+      url: proj.url || "",
+      technologies: Array.isArray(proj.technologies) ? proj.technologies : [],
+    })),
+  };
 
   return (
     <div ref={ref} className="w-full h-full bg-white print:bg-white text-black overflow-hidden relative">
-      {resume.template === "modern" && <ModernTemplate resume={resume} />}
-      {resume.template === "minimal" && <MinimalTemplate resume={resume} />}
-      {resume.template === "creative" && <CreativeTemplate resume={resume} />}
-      {resume.template === "professional" && <ProfessionalTemplate resume={resume} />}
-      {resume.template === "academic" && <AcademicTemplate resume={resume} />}
-      {resume.template === "tech" && <TechTemplate resume={resume} />}
+      {resume.template === "modern" && <ModernTemplate resume={resume as any} />}
+      {resume.template === "minimal" && <MinimalTemplate resume={resume as any} />}
+      {resume.template === "creative" && <CreativeTemplate resume={resume as any} />}
+      {resume.template === "professional" && <ProfessionalTemplate resume={resume as any} />}
+      {resume.template === "academic" && <AcademicTemplate resume={resume as any} />}
+      {resume.template === "tech" && <TechTemplate resume={resume as any} />}
     </div>
   );
 });

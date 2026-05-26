@@ -39,6 +39,27 @@ export default function EditorPage() {
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
     documentTitle: `${resume.personalInfo.fullName || 'Untitled'}_Resume`,
+    pageStyle: `
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      @media print {
+        html, body {
+          width: 210mm;
+          height: 297mm;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    `,
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -117,33 +138,34 @@ export default function EditorPage() {
     }
   };
 
-  // Viewport scaling logic
+  // Viewport scaling logic using ResizeObserver to ensure robust size detection
   useEffect(() => {
-    const handleResize = () => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const padding = 48; // padding around the A4 paper
-      const availableWidth = rect.width - padding;
-      const availableHeight = rect.height - padding;
+    if (!containerRef.current) return;
+
+    const handleResize = (entries: ResizeObserverEntry[]) => {
+      const entry = entries[0];
+      if (!entry) return;
+
+      const { width } = entry.contentRect;
       
+      // Determine padding based on container width
+      const padding = width < 600 ? 32 : 48;
+      const availableWidth = width - padding;
       const targetWidth = 794; // width of 210mm in pixels at 96 DPI
-      const targetHeight = 1123; // height of 297mm in pixels at 96 DPI
-      
+
       const scaleW = availableWidth / targetWidth;
-      const scaleH = availableHeight / targetHeight;
       
-      const newScale = Math.min(scaleW, scaleH);
-      setScale(Math.max(0.2, Math.min(newScale, 1.2))); // cap scale between 20% and 120%
+      // Scale based on available width, capped between 30% and 100%
+      setScale(Math.max(0.3, Math.min(scaleW, 1.0)));
     };
 
-    // Delay calculation slightly to allow container to render
-    const timer = setTimeout(handleResize, 100);
-    window.addEventListener("resize", handleResize);
+    const observer = new ResizeObserver(handleResize);
+    observer.observe(containerRef.current);
+
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", handleResize);
+      observer.disconnect();
     };
-  }, [status]);
+  }, []);
 
   // Global auto-save to backend
   useEffect(() => {
@@ -277,12 +299,12 @@ export default function EditorPage() {
         {/* Pane 3: Live Preview — desktop sidebar + mobile fullscreen when preview tab active */}
         <div
           ref={containerRef}
-          className={`${activeSection === "preview" ? "flex pb-16" : "hidden"} lg:flex flex-1 h-full bg-slate-100/50 dark:bg-black/20 overflow-auto items-start lg:items-center justify-center p-4 lg:p-6 relative select-none`}
+          className={`${activeSection === "preview" ? "flex pb-16" : "hidden"} lg:flex flex-1 h-full bg-slate-100/50 dark:bg-black/20 overflow-auto items-start justify-center p-4 lg:p-6 relative select-none`}
         >
           {/* Mobile back button */}
           <button
             onClick={() => setActiveSection("personal")}
-            className="lg:hidden absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm"
+            className="lg:hidden fixed top-16 left-3 z-20 flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to Edit
@@ -291,35 +313,46 @@ export default function EditorPage() {
           {/* Mobile download button */}
           <button
             onClick={() => handlePrint()}
-            className="lg:hidden absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-indigo-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md"
+            className="lg:hidden fixed top-16 right-3 z-20 flex items-center gap-1.5 bg-indigo-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md"
           >
             <Download className="w-3.5 h-3.5" />
             Download PDF
           </button>
 
-          {/* Paper Document — visual preview only, no print ref */}
+          {/* Outer container — has the exact scaled dimensions to prevent layout overflow and centering issues */}
           <div
             style={{
-              transform: `scale(${scale})`,
-              transformOrigin: "top center",
-              width: "210mm",
-              height: "297mm",
-              marginTop: activeSection === "preview" ? "2.5rem" : "0",
+              width: `${794 * scale}px`,
+              height: `${1123 * scale}px`,
+              position: "relative",
+              marginTop: "1.5rem",
+              marginBottom: "1.5rem",
+              flexShrink: 0,
             }}
-            className="bg-white paper-shadow relative group shrink-0 rounded-sm"
           >
-            <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-              <span className="bg-black/70 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-md font-mono">{Math.round(scale * 100)}% Fitted</span>
+            {/* Paper wrapper — scaled to fit available space */}
+            <div
+              style={{
+                width: "794px",
+                height: "1123px",
+                transform: `scale(${scale})`,
+                transformOrigin: "top left",
+                position: "absolute",
+                top: 0,
+                left: 0,
+              }}
+              className="bg-white paper-shadow relative group shrink-0 rounded-sm"
+            >
+              <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                <span className="bg-black/70 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-md font-mono">{Math.round(scale * 100)}% Fitted</span>
+              </div>
+              <ResumePreview />
             </div>
-            <ResumePreview />
           </div>
         </div>
 
         {/* Always-rendered print target — off-screen so react-to-print works on all screen sizes */}
-        <div
-          style={{ position: "absolute", left: "-9999px", top: 0, width: "210mm", pointerEvents: "none" }}
-          aria-hidden="true"
-        >
+        <div className="print-resume-target" aria-hidden="true">
           <ResumePreview ref={componentRef} />
         </div>
       </main>

@@ -235,6 +235,17 @@
   }
 }
 
+/* Print target: always in DOM but off-screen — react-to-print reads this element */
+.print-resume-target {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: 210mm;
+  min-height: 297mm;
+  pointer-events: none;
+  overflow: visible;
+}
+
 @media print {
   html, body {
     margin: 0 !important;
@@ -243,7 +254,7 @@
     width: 100% !important;
     height: 100% !important;
   }
-  
+
   .paper-shadow {
     box-shadow: none !important;
     margin: 0 !important;
@@ -253,7 +264,7 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
+
   /* Hide Next.js dev overlays during print if any */
   #nextjs-portal {
     display: none !important;
