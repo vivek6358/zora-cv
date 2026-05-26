@@ -323,7 +323,7 @@ export default function EditorPage() {
           <div
             style={{
               width: "794px",
-              minHeight: "1123px",
+              height: "1123px",
               transform: `scale(${scale})`,
               transformOrigin: "top center",
               /* Collapse excess vertical space that transform leaves behind */
@@ -331,7 +331,7 @@ export default function EditorPage() {
               marginTop: "1.5rem",
               flexShrink: 0,
             }}
-            className="bg-white paper-shadow relative group rounded-sm overflow-visible"
+            className="bg-white paper-shadow relative group rounded-sm overflow-hidden"
           >
             <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
               <span className="bg-black/70 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-md font-mono">{Math.round(scale * 100)}% Fitted</span>
