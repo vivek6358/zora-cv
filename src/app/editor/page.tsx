@@ -299,7 +299,7 @@ export default function EditorPage() {
         {/* Pane 3: Live Preview — desktop sidebar + mobile fullscreen when preview tab active */}
         <div
           ref={containerRef}
-          className={`${activeSection === "preview" ? "flex pb-16" : "hidden"} lg:flex flex-1 h-full bg-slate-100/50 dark:bg-black/20 overflow-auto items-start justify-center p-4 lg:p-6 relative select-none`}
+          className={`${activeSection === "preview" ? "flex" : "hidden"} lg:flex flex-1 h-full bg-slate-100/50 dark:bg-black/20 overflow-auto items-start justify-center p-4 lg:p-6 pb-20 relative select-none`}
         >
           {/* Mobile back button */}
           <button
@@ -319,35 +319,24 @@ export default function EditorPage() {
             Download PDF
           </button>
 
-          {/* Outer container — has the exact scaled dimensions to prevent layout overflow and centering issues */}
+          {/* Scaled paper — transformOrigin top center so flex centering stays correct */}
           <div
             style={{
-              width: `${794 * scale}px`,
-              height: `${1123 * scale}px`,
-              position: "relative",
+              width: "794px",
+              minHeight: "1123px",
+              transform: `scale(${scale})`,
+              transformOrigin: "top center",
+              /* Collapse excess vertical space that transform leaves behind */
+              marginBottom: `${-(1123 * (1 - scale))}px`,
               marginTop: "1.5rem",
-              marginBottom: "1.5rem",
               flexShrink: 0,
             }}
+            className="bg-white paper-shadow relative group rounded-sm overflow-visible"
           >
-            {/* Paper wrapper — scaled to fit available space */}
-            <div
-              style={{
-                width: "794px",
-                height: "1123px",
-                transform: `scale(${scale})`,
-                transformOrigin: "top left",
-                position: "absolute",
-                top: 0,
-                left: 0,
-              }}
-              className="bg-white paper-shadow relative group shrink-0 rounded-sm"
-            >
-              <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                <span className="bg-black/70 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-md font-mono">{Math.round(scale * 100)}% Fitted</span>
-              </div>
-              <ResumePreview />
+            <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+              <span className="bg-black/70 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-md font-mono">{Math.round(scale * 100)}% Fitted</span>
             </div>
+            <ResumePreview />
           </div>
         </div>
 
