@@ -332,10 +332,10 @@ export default function DashboardPage() {
                   <div className="aspect-[1/1.1] bg-muted/30 relative flex items-center justify-center p-4 transition-colors group-hover:bg-primary/5">
                     {/* Paper thumbnail */}
                     <ResumeMiniThumbnail resume={r} />
-                    
-                    {/* Overlay Action */}
-                    <div className="absolute inset-0 bg-indigo-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm z-20">
-                      <button 
+
+                    {/* Overlay Action — visible on hover (desktop) */}
+                    <div className="absolute inset-0 bg-indigo-900/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center backdrop-blur-sm z-20">
+                      <button
                         onClick={() => {
                           const mappedResume = { ...r, id: r._id };
                           loadResume(mappedResume);
@@ -347,7 +347,7 @@ export default function DashboardPage() {
                       </button>
                     </div>
                   </div>
-                  
+
                   <div className="p-5 flex flex-col justify-between flex-1 bg-white dark:bg-slate-900 relative z-30">
                     <div>
                       <h3 className="font-bold text-slate-900 dark:text-white truncate text-lg">{r.title || "Untitled Resume"}</h3>
@@ -356,12 +356,24 @@ export default function DashboardPage() {
                         Updated {new Date(r.updatedAt).toLocaleDateString()}
                       </p>
                     </div>
-                    
+
+                    {/* Mobile: direct Open button always visible */}
+                    <button
+                      onClick={() => {
+                        const mappedResume = { ...r, id: r._id };
+                        loadResume(mappedResume);
+                        router.push("/editor");
+                      }}
+                      className="sm:hidden mt-3 w-full bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-transform cursor-pointer"
+                    >
+                      Open in Editor
+                    </button>
+
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                       <div className="text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/30 uppercase tracking-wide">
                         {r.template}
                       </div>
-                      <button 
+                      <button
                         onClick={() => handleDelete(r._id)}
                         className="text-slate-400 hover:text-rose-500 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
                         title="Delete Resume"

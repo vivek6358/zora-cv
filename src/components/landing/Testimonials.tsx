@@ -1,7 +1,5 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { motion, useAnimationFrame, useMotionValue, useTransform } from "framer-motion";
 import { Star, Quote } from "lucide-react";
 
 const testimonials = [
@@ -61,16 +59,12 @@ const testimonials = [
   },
 ];
 
-function TestimonialCard({ t }: { t: typeof testimonials[0] }) {
+function TestimonialCard({ t }: { t: (typeof testimonials)[0] }) {
   return (
     <div className="w-[380px] flex-shrink-0 group relative p-[1px] rounded-3xl bg-gradient-to-b from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-900 transition-all duration-500 hover:scale-105 hover:z-10 hover:shadow-2xl hover:shadow-indigo-500/10 cursor-default">
-      {/* Animated glow on hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 via-orange-400/0 to-amber-400/0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none blur-xl" />
-      
       <div className="relative h-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[23px] p-7 flex flex-col justify-between overflow-hidden">
-        {/* Subtle decorative quote mark */}
         <Quote className="absolute top-6 right-6 w-20 h-20 text-slate-100 dark:text-slate-800/50 -rotate-12 transition-transform duration-500 group-hover:rotate-0" />
-
         <div className="relative z-10">
           <div className="flex gap-1 mb-5">
             {[...Array(t.rating)].map((_, j) => (
@@ -78,10 +72,9 @@ function TestimonialCard({ t }: { t: typeof testimonials[0] }) {
             ))}
           </div>
           <p className="text-slate-700 dark:text-slate-300 text-[15px] leading-relaxed mb-8 relative z-10">
-            "{t.quote}"
+            &ldquo;{t.quote}&rdquo;
           </p>
         </div>
-
         <div className="relative z-10 flex items-center justify-between border-t border-slate-200/60 dark:border-slate-700/60 pt-5 mt-auto">
           <div className="flex items-center gap-3">
             <div className={`w-11 h-11 rounded-full ${t.avatar} flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white dark:ring-slate-900`}>
@@ -99,44 +92,29 @@ function TestimonialCard({ t }: { t: typeof testimonials[0] }) {
   );
 }
 
-function MarqueeRow({ items, direction = 1, speed = 25 }: { items: typeof testimonials, direction?: number, speed?: number }) {
-  const baseX = useMotionValue(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  useAnimationFrame((time, delta) => {
-    let moveBy = direction * speed * (delta / 1000);
-    // When absolute position goes beyond half (since we duplicate content 2x), reset it
-    const containerWidth = containerRef.current?.offsetWidth || 0;
-    const contentWidth = containerWidth / 2;
-    
-    if (contentWidth > 0) {
-      if (direction === -1 && baseX.get() <= -contentWidth) {
-        baseX.set(baseX.get() + contentWidth);
-      } else if (direction === 1 && baseX.get() >= 0) {
-        baseX.set(baseX.get() - contentWidth);
-      }
-    }
-    
-    baseX.set(baseX.get() + moveBy);
-  });
+function MarqueeRow({
+  items,
+  direction = "left",
+  duration = 40,
+}: {
+  items: (typeof testimonials);
+  direction?: "left" | "right";
+  duration?: number;
+}) {
+  const animClass = direction === "left" ? "marquee-left" : "marquee-right";
 
   return (
-    <div className="overflow-hidden flex w-full relative py-4">
-      {/* Gradient masks for smooth fading edges */}
+    <div className="overflow-hidden flex w-full relative py-4 touch-pan-y" aria-hidden="true">
       <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-slate-50 dark:from-slate-950 to-transparent z-10 pointer-events-none" />
       <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-slate-50 dark:from-slate-950 to-transparent z-10 pointer-events-none" />
-      
-      <motion.div 
-        ref={containerRef}
-        className="flex gap-6 whitespace-nowrap px-3" 
-        style={{ x: baseX }}
-        whileHover={{ animationPlayState: "paused" }} // Fallback for framer motion hover
+      <div
+        className={`flex gap-6 px-3 ${animClass} [animation-play-state:running] hover:[animation-play-state:paused]`}
+        style={{ "--marquee-duration": `${duration}s` } as React.CSSProperties}
       >
-        {/* We duplicate the array to create a seamless loop */}
         {[...items, ...items].map((t, i) => (
           <TestimonialCard key={`${t.name}-${i}`} t={t} />
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -144,50 +122,30 @@ function MarqueeRow({ items, direction = 1, speed = 25 }: { items: typeof testim
 export function Testimonials() {
   return (
     <section className="py-28 bg-slate-50 dark:bg-slate-950 relative overflow-hidden flex flex-col items-center">
-      {/* Advanced grid background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-      
       <div className="absolute top-0 right-0 w-[600px] h-[400px] bg-amber-400/5 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[400px] bg-orange-400/5 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full mb-16 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 text-sm font-semibold mb-5 shadow-sm"
-          >
-            <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-            Success Stories
-          </motion.div>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
-            Loved by <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent">120,000+ professionals</span>
-              <motion.div
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-                className="absolute -bottom-2 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full origin-left opacity-30"
-              />
-            </span>
-          </h2>
-          <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
-            Join the thousands of job seekers landing their dream roles with our free, ATS-optimized builder.
-          </p>
-        </motion.div>
+      {/* Header — CSS fade-in via animate-fade-up class */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full mb-16 text-center animate-fade-up">
+        <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 text-sm font-semibold mb-5 shadow-sm">
+          <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+          Success Stories
+        </div>
+        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
+          Loved by{" "}
+          <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent">
+            120,000+ professionals
+          </span>
+        </h2>
+        <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+          Join the thousands of job seekers landing their dream roles with our free, ATS-optimized builder.
+        </p>
       </div>
 
       <div className="w-full flex flex-col gap-4 relative z-10 -rotate-2 scale-105">
-        <MarqueeRow items={testimonials.slice(0, 3)} direction={-1} speed={30} />
-        <MarqueeRow items={testimonials.slice(3, 6)} direction={1} speed={25} />
+        <MarqueeRow items={testimonials.slice(0, 3)} direction="right" duration={35} />
+        <MarqueeRow items={testimonials.slice(3, 6)} direction="left"  duration={28} />
       </div>
     </section>
   );

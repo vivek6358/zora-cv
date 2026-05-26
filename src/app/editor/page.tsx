@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useResumeStore } from "@/store/resumeStore";
 import Link from "next/link";
-import { ArrowLeft, Download, CheckCircle2, MoreHorizontal, Zap, Check, Loader2, Sparkles, Copy, X, FileText, Star } from "lucide-react";
+import { ArrowLeft, Download, CheckCircle2, MoreHorizontal, Zap, Check, Loader2, Sparkles, Copy, X, FileText, Star, Eye, ChevronLeft } from "lucide-react";
 import { calculateATSScore, getATSLabel } from "@/lib/ats";
 import { EditorSidebar } from "@/components/editor/EditorSidebar";
 import { PersonalInfoForm } from "@/components/forms/PersonalInfoForm";
@@ -237,13 +237,13 @@ export default function EditorPage() {
 
       {/* Main Workspace - 3 Panes */}
       <main className="flex-1 flex overflow-hidden relative bg-muted/10">
-        
+
         {/* Pane 1: Navigation Sidebar */}
         <EditorSidebar activeSection={activeSection} setActiveSection={setActiveSection} />
 
-        {/* Pane 2: Form Workspace — full width on mobile, 45% on desktop */}
-        <div className="flex-1 md:w-[45%] md:flex-none h-full bg-card flex flex-col relative z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] md:border-r">
-          <div className="flex-1 overflow-y-auto scrollbar-hide p-4 md:p-8 pb-24 md:pb-8">
+        {/* Pane 2: Form Workspace — hidden on mobile/tablet when preview tab is active */}
+        <div className={`${activeSection === "preview" ? "hidden" : "flex"} flex-1 lg:flex lg:w-[45%] lg:flex-none h-full bg-card flex-col relative z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] lg:border-r`}>
+          <div className="flex-1 overflow-y-auto scrollbar-hide p-4 lg:p-8 pb-24 lg:pb-8">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeSection}
@@ -274,27 +274,53 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {/* Pane 3: Live Preview rendering with Auto Scaling */}
-        <div 
-          ref={containerRef} 
-          className="hidden lg:flex flex-1 h-full bg-slate-100/50 dark:bg-black/20 overflow-hidden items-center justify-center p-6 relative select-none"
+        {/* Pane 3: Live Preview — desktop sidebar + mobile fullscreen when preview tab active */}
+        <div
+          ref={containerRef}
+          className={`${activeSection === "preview" ? "flex pb-16" : "hidden"} lg:flex flex-1 h-full bg-slate-100/50 dark:bg-black/20 overflow-auto items-start lg:items-center justify-center p-4 lg:p-6 relative select-none`}
         >
-          {/* Paper Document */}
-          <div 
-            style={{ 
+          {/* Mobile back button */}
+          <button
+            onClick={() => setActiveSection("personal")}
+            className="lg:hidden absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back to Edit
+          </button>
+
+          {/* Mobile download button */}
+          <button
+            onClick={() => handlePrint()}
+            className="lg:hidden absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-indigo-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Download PDF
+          </button>
+
+          {/* Paper Document — visual preview only, no print ref */}
+          <div
+            style={{
               transform: `scale(${scale})`,
-              transformOrigin: "center center",
+              transformOrigin: "top center",
               width: "210mm",
-              height: "297mm"
+              height: "297mm",
+              marginTop: activeSection === "preview" ? "2.5rem" : "0",
             }}
             className="bg-white paper-shadow relative group shrink-0 rounded-sm"
           >
             <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
               <span className="bg-black/70 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-md font-mono">{Math.round(scale * 100)}% Fitted</span>
             </div>
-            {/* Live Resume Preview Component */}
-            <ResumePreview ref={componentRef} />
+            <ResumePreview />
           </div>
+        </div>
+
+        {/* Always-rendered print target — off-screen so react-to-print works on all screen sizes */}
+        <div
+          style={{ position: "absolute", left: "-9999px", top: 0, width: "210mm", pointerEvents: "none" }}
+          aria-hidden="true"
+        >
+          <ResumePreview ref={componentRef} />
         </div>
       </main>
 

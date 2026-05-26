@@ -79,12 +79,95 @@
 }
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+/* CSS aurora — GPU-composited replacement for Three.js shader background */
+@keyframes aurora-drift-1 {
+  0%   { transform: translate(0%, 0%)   scale(1);   opacity: 0.22; }
+  33%  { transform: translate(6%, -4%)  scale(1.08); opacity: 0.28; }
+  66%  { transform: translate(-4%, 6%)  scale(0.96); opacity: 0.18; }
+  100% { transform: translate(0%, 0%)   scale(1);   opacity: 0.22; }
+}
+@keyframes aurora-drift-2 {
+  0%   { transform: translate(0%, 0%)   scale(1);   opacity: 0.18; }
+  40%  { transform: translate(-8%, 5%)  scale(1.1); opacity: 0.24; }
+  70%  { transform: translate(4%, -7%)  scale(0.94); opacity: 0.14; }
+  100% { transform: translate(0%, 0%)   scale(1);   opacity: 0.18; }
+}
+@keyframes aurora-drift-3 {
+  0%   { transform: translate(0%, 0%)   scale(1);   opacity: 0.14; }
+  50%  { transform: translate(5%, 8%)   scale(1.06); opacity: 0.20; }
+  100% { transform: translate(0%, 0%)   scale(1);   opacity: 0.14; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.aurora-layer {
+  position: absolute;
+  border-radius: 50%;
+  /* Only compositor-promoted properties animate — no layout thrash */
+  will-change: transform, opacity;
+  contain: strict;
+}
+.aurora-1 {
+  width: 70%; height: 55%;
+  top: -10%; left: 10%;
+  background: radial-gradient(ellipse, rgba(99,102,241,0.38) 0%, rgba(6,182,212,0.22) 45%, transparent 75%);
+  filter: blur(60px);
+  animation: aurora-drift-1 14s ease-in-out infinite;
+}
+.aurora-2 {
+  width: 60%; height: 50%;
+  top: 20%; right: -5%;
+  background: radial-gradient(ellipse, rgba(139,92,246,0.32) 0%, rgba(236,72,153,0.16) 50%, transparent 75%);
+  filter: blur(70px);
+  animation: aurora-drift-2 18s ease-in-out infinite;
+}
+.aurora-3 {
+  width: 50%; height: 40%;
+  bottom: 5%; left: 30%;
+  background: radial-gradient(ellipse, rgba(6,182,212,0.28) 0%, rgba(99,102,241,0.14) 55%, transparent 75%);
+  filter: blur(55px);
+  animation: aurora-drift-3 22s ease-in-out infinite;
+}
+
+/* Simple fade-up entrance for sections that no longer use framer-motion */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out both;
+}
+
+/* CSS marquee — replaces framer-motion useAnimationFrame marquee */
+@keyframes marquee-scroll-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-scroll-right {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.marquee-left {
+  animation: marquee-scroll-left var(--marquee-duration, 40s) linear infinite;
+  will-change: transform;
+}
+.marquee-right {
+  animation: marquee-scroll-right var(--marquee-duration, 40s) linear infinite;
+  will-change: transform;
+}
+
+/* Reduce motion: freeze aurora, marquees, and float */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-layer  { animation: none !important; }
+  .marquee-left  { animation: none !important; }
+  .marquee-right { animation: none !important; }
+  .animate-float { animation: none !important; }
 }
 
 /* Custom premium utilities */
@@ -125,6 +208,30 @@
   /* Paper rendering for live preview */
   .paper-shadow {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03), 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  }
+
+  /* GPU promotion for elements that slide/fade in — prevents paint during animation */
+  .gpu-layer {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Limit repaint scope for animated card containers */
+  .contain-paint {
+    contain: paint;
+  }
+
+  /* Smooth scrolling — respects reduced-motion */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Touch-action optimisation for interactive elements */
+  .touch-pan-y {
+    touch-action: pan-y;
   }
 }
 

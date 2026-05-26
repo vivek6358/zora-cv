@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { User, Briefcase, GraduationCap, Wrench, FolderGit2, LayoutTemplate } from "lucide-react";
+import { User, Briefcase, GraduationCap, Wrench, FolderGit2, LayoutTemplate, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { useResumeStore } from "@/store/resumeStore";
 
@@ -20,12 +20,12 @@ export function EditorSidebar({ activeSection, setActiveSection }: { activeSecti
   const stepNumber = navItems.findIndex(item => item.id === activeSection) + 1;
   const displayStep = stepNumber > 0 ? stepNumber : 1; // Default to 1 if not in the main 5
 
-  const allItems = [...navItems, { id: "templates", label: "Templates", icon: LayoutTemplate }];
+  const allItems = [...navItems, { id: "templates", label: "Templates", icon: LayoutTemplate }, { id: "preview", label: "Preview", icon: Eye }];
 
   return (
     <>
       {/* ── DESKTOP: vertical left sidebar ── */}
-      <div className="hidden md:flex w-64 bg-card border-r flex-col h-full z-20 shadow-sm shrink-0">
+      <div className="hidden lg:flex w-64 bg-card border-r flex-col h-full z-20 shadow-sm shrink-0">
         <div className="p-4 border-b">
           <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Resume Content</div>
           <div className="text-sm text-foreground font-medium flex items-center justify-between">
@@ -79,7 +79,7 @@ export function EditorSidebar({ activeSection, setActiveSection }: { activeSecti
       </div>
 
       {/* ── MOBILE: fixed bottom tab bar ── */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 dark:bg-slate-950/95 border-t border-slate-200 dark:border-slate-800 backdrop-blur-xl safe-area-bottom">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 dark:bg-slate-950/95 border-t border-slate-200 dark:border-slate-800 backdrop-blur-xl safe-area-bottom">
         <div className="flex items-stretch h-16">
           {allItems.map((item) => {
             const isActive = activeSection === item.id;

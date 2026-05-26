@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, CheckCircle2, Zap } from "lucide-react";
@@ -72,7 +72,7 @@ const DEMO_DATA = {
       { w: "60%", bold: false },
     ],
   },
-};
+} as const;
 
 const sections = Object.keys(DEMO_DATA) as (keyof typeof DEMO_DATA)[];
 
@@ -88,43 +88,56 @@ export function InteractiveShowcase() {
   const [tipIdx, setTipIdx] = useState(0);
   const [charIdx, setCharIdx] = useState(0);
 
+  // Track ticks with a ref to avoid stale closures; a single interval drives all state
+  const tickRef = useRef(0);
+
+  useEffect(() => {
+    const FIELD_INTERVAL  = 1400; // ms per field advance
+    const SECTION_TICKS   = Math.round(3000 / FIELD_INTERVAL);  // ~2 ticks
+    const ATS_TICKS       = Math.round(1600 / FIELD_INTERVAL);  // ~1 tick
+    const TIP_TICKS       = Math.round(3200 / FIELD_INTERVAL);  // ~2 ticks
+
+    const id = setInterval(() => {
+      tickRef.current += 1;
+      const t = tickRef.current;
+
+      // Advance highlighted field
+      setCharIdx((c) => c + 1);
+
+      // Advance section every ~3 s
+      if (t % SECTION_TICKS === 0) {
+        setActiveIdx((s) => (s + 1) % sections.length);
+        setCharIdx(0);
+      }
+
+      // Nudge ATS score every ~1.6 s
+      if (t % ATS_TICKS === 0) {
+        setAtsScore((s) => {
+          const next = s + Math.floor(Math.random() * 3 + 1);
+          return next > 96 ? 72 : next;
+        });
+      }
+
+      // Cycle tip every ~3.2 s
+      if (t % TIP_TICKS === 0) {
+        setTipIdx((c) => (c + 1) % aiSuggestions.length);
+      }
+    }, FIELD_INTERVAL);
+
+    return () => clearInterval(id);
+  }, []);
+
+  const handleSectionClick = useCallback((i: number) => {
+    setActiveIdx(i);
+    setCharIdx(0);
+  }, []);
+
   const activeSection = sections[activeIdx];
   const activeData = DEMO_DATA[activeSection];
-  const currentField = activeData.fields[charIdx % activeData.fields.length];
-
-  // Cycle sections
-  useEffect(() => {
-    const t = setInterval(() => {
-      setActiveIdx((s) => (s + 1) % sections.length);
-      setCharIdx(0);
-    }, 3000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Cycle typed field
-  useEffect(() => {
-    const t = setInterval(() => setCharIdx((c) => c + 1), 1400);
-    return () => clearInterval(t);
-  }, []);
-
-  // Animate ATS score
-  useEffect(() => {
-    const t = setInterval(() => {
-      setAtsScore((s) => {
-        const next = s + Math.floor(Math.random() * 3 + 1);
-        return next > 96 ? 72 : next;
-      });
-    }, 1600);
-    return () => clearInterval(t);
-  }, []);
-
-  useEffect(() => {
-    const t = setInterval(() => setTipIdx((c) => (c + 1) % aiSuggestions.length), 3200);
-    return () => clearInterval(t);
-  }, []);
+  const fieldPos = charIdx % activeData.fields.length;
 
   const scoreColor = atsScore > 85 ? "text-emerald-500" : atsScore > 70 ? "text-amber-500" : "text-rose-500";
-  const ringColor = atsScore > 85 ? "stroke-emerald-400" : atsScore > 70 ? "stroke-amber-400" : "stroke-rose-400";
+  const ringColor  = atsScore > 85 ? "stroke-emerald-400" : atsScore > 70 ? "stroke-amber-400" : "stroke-rose-400";
   const dashOffset = 283 - (283 * atsScore) / 100;
 
   return (
@@ -180,7 +193,7 @@ export function InteractiveShowcase() {
               {sections.map((sec, i) => (
                 <button
                   key={sec}
-                  onClick={() => { setActiveIdx(i); setCharIdx(0); }}
+                  onClick={() => handleSectionClick(i)}
                   className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     activeIdx === i
                       ? "bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400"
@@ -201,7 +214,7 @@ export function InteractiveShowcase() {
               </div>
             </div>
 
-            {/* Form panel with real typed data */}
+            {/* Form panel */}
             <div className="bg-white dark:bg-slate-950 p-6 border-r border-slate-100 dark:border-slate-800">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -217,14 +230,14 @@ export function InteractiveShowcase() {
                       <div key={f.label}>
                         <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">{f.label}</label>
                         <div className={`h-9 rounded-xl border flex items-center px-3 text-sm font-medium ${
-                          i === charIdx % activeData.fields.length
+                          i === fieldPos
                             ? "border-indigo-300 dark:border-indigo-700 bg-indigo-50/50 dark:bg-indigo-950/30 ring-2 ring-indigo-200 dark:ring-indigo-900 text-indigo-700 dark:text-indigo-300"
-                            : i < charIdx % activeData.fields.length
+                            : i < fieldPos
                             ? "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300"
                             : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-transparent"
                         }`}>
                           <AnimatePresence mode="wait">
-                            {i <= charIdx % activeData.fields.length && (
+                            {i <= fieldPos && (
                               <motion.span
                                 key={`${activeIdx}-${i}-${charIdx}`}
                                 initial={{ opacity: 0 }}
@@ -232,7 +245,7 @@ export function InteractiveShowcase() {
                                 transition={{ duration: 0.3 }}
                               >
                                 {f.value}
-                                {i === charIdx % activeData.fields.length && (
+                                {i === fieldPos && (
                                   <span className="animate-pulse ml-0.5 inline-block w-0.5 h-4 bg-indigo-500 align-middle" />
                                 )}
                               </motion.span>
@@ -261,18 +274,15 @@ export function InteractiveShowcase() {
               </AnimatePresence>
             </div>
 
-            {/* Resume Preview panel with real content */}
+            {/* Resume Preview panel */}
             <div className="bg-slate-100 dark:bg-slate-900 p-6 flex items-center justify-center">
               <div className="w-full max-w-[340px] bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200">
-                {/* Header */}
                 <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 text-white">
                   <p className="text-sm font-black tracking-wide truncate">Alexandra Chen</p>
                   <p className="text-xs text-white/70 mt-0.5 truncate">Senior Product Manager · alex.chen@email.com</p>
                 </div>
 
-                {/* Body */}
                 <div className="p-4 space-y-4">
-                  {/* Experience */}
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-1.5">Experience</p>
                     <p className="text-xs font-bold text-slate-800">Product Manager II — Google LLC</p>
@@ -290,14 +300,12 @@ export function InteractiveShowcase() {
                     </div>
                   </div>
 
-                  {/* Education */}
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-1.5">Education</p>
                     <p className="text-xs font-bold text-slate-800">B.S. Computer Science — UC Berkeley</p>
                     <p className="text-[10px] text-slate-500">GPA: 3.9 / 4.0 · 2019</p>
                   </div>
 
-                  {/* Skills */}
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-1.5">Skills</p>
                     <div className="flex flex-wrap gap-1.5">
